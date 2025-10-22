@@ -8,6 +8,12 @@ This utility lists application bundles whose Spotlight `kMDItemDateAdded` timest
 conda run -n py3.11 python list_latest_installs.py
 ```
 
+Pass a custom look-back window (in days) if needed:
+
+```bash
+conda run -n py3.11 python list_latest_installs.py --days 30
+```
+
 The script scans:
 
 - `/Applications`

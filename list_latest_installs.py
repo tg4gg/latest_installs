@@ -7,6 +7,7 @@ Results are printed to stdout and stored in latest_installs.txt alongside this s
 
 from __future__ import annotations
 
+import argparse
 import datetime
 import subprocess
 import sys
@@ -19,7 +20,7 @@ ROOTS = [
     Path.home() / "Applications",
 ]
 OUTPUT_FILE = Path(__file__).with_name("latest_installs.txt")
-LOOKBACK_DAYS = 14
+DEFAULT_LOOKBACK_DAYS = 14
 
 
 def _iter_app_bundles(root: Path) -> list[Path]:
@@ -51,9 +52,9 @@ def _get_date_added(app_path: Path) -> datetime.datetime | None:
     return added
 
 
-def gather_latest_installs() -> list[tuple[datetime.datetime, Path]]:
+def gather_latest_installs(days: int) -> list[tuple[datetime.datetime, Path]]:
     """Return (date_added, app_path) tuples sorted newest first."""
-    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=LOOKBACK_DAYS)
+    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
     results: list[tuple[datetime.datetime, Path]] = []
     for root in ROOTS:
         if not root.exists():
@@ -69,10 +70,10 @@ def gather_latest_installs() -> list[tuple[datetime.datetime, Path]]:
     return results
 
 
-def build_report(entries: list[tuple[datetime.datetime, Path]]) -> list[str]:
+def build_report(entries: list[tuple[datetime.datetime, Path]], days: int) -> list[str]:
     """Format entries into human-readable report lines."""
     if not entries:
-        return ["No applications found with date-added within the last 14 days."]
+        return [f"No applications found with date-added within the last {days} days."]
     local_tz = datetime.datetime.now().astimezone().tzinfo
     lines = []
     for added, app_path in entries:
@@ -86,9 +87,25 @@ def write_report(lines: list[str]) -> None:
     OUTPUT_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> int:
-    entries = gather_latest_installs()
-    report_lines = build_report(entries)
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="List recently installed macOS apps.")
+    parser.add_argument(
+        "-d",
+        "--days",
+        type=int,
+        default=DEFAULT_LOOKBACK_DAYS,
+        help=f"Number of days to look back (default: {DEFAULT_LOOKBACK_DAYS}).",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv or [])
+    if args.days <= 0:
+        print("Days must be a positive integer.", file=sys.stderr)
+        return 1
+    entries = gather_latest_installs(args.days)
+    report_lines = build_report(entries, args.days)
     print("\n".join(report_lines))
     try:
         write_report(report_lines)
@@ -99,4 +116,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
