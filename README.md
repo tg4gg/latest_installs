@@ -14,4 +14,4 @@ The script scans:
 - `/Applications/Utilities`
 - `~/Applications`
 
-The report is written to `latest_installs.txt` in the same directory and echoed to the terminal.
+The report is written to `latest_installs.txt` in the same directory and echoed to the terminal. Each line includes any available download source (derived from the macOS quarantine metadata). If the metadata is missing, the source is shown as “Source unknown”.

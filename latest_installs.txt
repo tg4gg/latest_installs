@@ -1,7 +1,7 @@
-2025-10-22 16:14:05 -03 - Microsoft Word.app (/Applications/Microsoft Word.app)
-2025-10-13 15:16:21 -03 - Meld.app (/Applications/Meld.app)
-2025-10-13 14:13:52 -03 - Sublime Text.app (/Applications/Sublime Text.app)
-2025-10-13 13:54:24 -03 - Xmind.app (/Applications/Xmind.app)
-2025-10-12 21:46:08 -03 - Ghostty.app (/Applications/Ghostty.app)
-2025-10-12 12:00:21 -03 - NOIRLab Self Service.app (/Applications/NOIRLab Self Service.app)
-2025-10-09 09:10:36 -03 - Clockify Desktop.app (/Applications/Clockify Desktop.app)
+2025-10-22 16:14:05 -03 - Microsoft Word.app (/Applications/Microsoft Word.app) | Source unknown
+2025-10-13 15:16:21 -03 - Meld.app (/Applications/Meld.app) | Source unknown
+2025-10-13 14:13:52 -03 - Sublime Text.app (/Applications/Sublime Text.app) | Source unknown
+2025-10-13 13:54:24 -03 - Xmind.app (/Applications/Xmind.app) | Source unknown
+2025-10-12 21:46:08 -03 - Ghostty.app (/Applications/Ghostty.app) | Source unknown
+2025-10-12 12:00:21 -03 - NOIRLab Self Service.app (/Applications/NOIRLab Self Service.app) | Source unknown
+2025-10-09 09:10:36 -03 - Clockify Desktop.app (/Applications/Clockify Desktop.app) | Source unknown
