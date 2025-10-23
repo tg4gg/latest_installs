@@ -1,0 +1,91 @@
+Design Document: latest_installs Utility
+======================================
+
+Objective
+---------
+Produce a Python 3 script (`list_latest_installs.py`) that reports macOS application bundles whose Spotlight “date added” metadata falls within the most recent *N* days. Default look-back window is 14 days; users may override it via a command-line flag. The script prints a human-readable report to stdout and writes the same data to `latest_installs.txt` in the script directory.
+
+Environment Assumptions
+-----------------------
+- macOS system with Spotlight metadata available.
+- Python 3.11 (run via `conda run -n py3.11 python list_latest_installs.py`).
+- Script resides in a directory containing `README.md` and `latest_installs.txt`.
+
+Directories to Scan
+-------------------
+Inspect the following locations for top-level `.app` bundles:
+1. `/Applications`
+2. `/Applications/Utilities`
+3. `~/Applications`
+
+When traversing, exclude nested `.app` bundles (i.e., skip any `.app` path whose ancestor also has the `.app` suffix).
+
+Metadata Extraction
+-------------------
+- For each bundle path, run `mdls -name kMDItemDateAdded -raw <path>` to fetch the installation timestamp.
+- Treat blank output, `(null)`, or command failures as missing data (skip the entry).
+- Parse timestamps using `datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S %z")`.
+- Convert each timestamp to UTC for comparison against the cutoff (current UTC minus the look-back window).
+
+Filtering Logic
+---------------
+1. Compute cutoff = `datetime.utcnow() - timedelta(days=lookback_days)`.
+2. Only include bundles whose UTC “date added” ≥ cutoff.
+3. Sort results in descending order (newest first).
+
+Output Formatting
+-----------------
+- Determine the user’s local timezone with `datetime.now().astimezone().tzinfo`.
+- For each entry, convert the timestamp to local time and format `YYYY-MM-DD HH:MM:SS <TZ> - <BundleName> (<FullPath>)`.
+- If no entries meet the cutoff, print `No applications found with date-added within the last <days> days.` (with the actual day count).
+- Join lines with newline characters, print to stdout, and write to `latest_installs.txt` with a trailing newline.
+
+Command-Line Interface
+----------------------
+- Provide `--days`/`-d` option (int, default 14). Reject non-positive values with an error message (`Days must be a positive integer.`) and exit status 1.
+- Use `argparse` to parse the arguments.
+- Main entry point signature: `def main(argv: list[str] | None = None) -> int`.
+- Guard block: `if __name__ == "__main__": raise SystemExit(main(sys.argv[1:]))`.
+
+Module Structure
+----------------
+Recommended functions:
+1. `_iter_app_bundles(root: Path) -> list[Path]`: gather top-level bundles under a root.
+2. `_get_date_added(app_path: Path) -> datetime | None`: execute `mdls` command.
+3. `gather_latest_installs(days: int) -> list[tuple[datetime, Path]]`: orchestrate scanning/filtering.
+4. `build_report(entries, days) -> list[str]`: format output lines.
+5. `write_report(lines) -> None`: write to `latest_installs.txt`.
+6. `parse_args(argv)`: configure CLI.
+7. `main(argv)`: glue logic.
+
+File Paths
+----------
+Define constants at module level:
+- `ROOTS` list containing the three scan directories (`Path` objects).
+- `OUTPUT_FILE = Path(__file__).with_name("latest_installs.txt")`.
+- `DEFAULT_LOOKBACK_DAYS = 14`.
+
+Error Handling
+--------------
+- Handle `FileNotFoundError` when traversing.
+- For command execution (`subprocess.run`), set `capture_output=True`, `text=True`; rely on `returncode` for success status.
+- Any `OSError` during file writing should print an error to stderr and return exit code 1.
+
+README Expectations
+-------------------
+Document:
+1. Purpose of the utility.
+2. Default usage command using the Conda environment.
+3. Example invocation with `--days`.
+4. The directories scanned and mention that the report is saved to `latest_installs.txt`.
+
+Testing Steps
+-------------
+1. Run default command (`conda run -n py3.11 python list_latest_installs.py`) and ensure output matches `latest_installs.txt`.
+2. Run with a custom window (e.g., `--days 30`) to confirm additional entries appear when expected.
+3. Validate that passing `--days 0` prints the error and exits with status 1 (no file write should occur).
+
+Git Workflow
+------------
+- After implementing or updating, run the script for verification before pushing.
+- Commit message template: `Allow configurable lookback window` (align with previous history if necessary).
